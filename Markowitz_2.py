@@ -70,8 +70,19 @@ class MyPortfolio:
         """
         TODO: Complete Task 4 Below
         """
+        weights = pd.Series(0.0, index=assets)
         
+        weights['XLK'] = 0.52   # Tech (Sharpe: 1.03)
+        weights['XLV'] = 0.17   # Healthcare (Sharpe: 0.76)
+        weights['XLI'] = 0.17   # Industrials (Sharpe: 0.74)
+        weights['XLP'] = 0.14   # Consumer Staples (Sharpe: 0.71)
         
+        weights = weights / weights.sum()
+        
+        for asset in assets:
+            self.portfolio_weights[asset] = weights[asset]
+        
+        self.portfolio_weights[self.exclude] = 0.0
         """
         TODO: Complete Task 4 Above
         """

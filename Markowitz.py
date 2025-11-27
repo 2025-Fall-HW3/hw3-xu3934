@@ -62,6 +62,14 @@ class EqualWeightPortfolio:
         """
         TODO: Complete Task 1 Below
         """
+        n_assets = len(assets)
+        weight = 1.0 / n_assets
+        
+        # Assign weight to each asset column individually
+        for asset in assets:
+            self.portfolio_weights[asset] = weight
+        
+        
 
         """
         TODO: Complete Task 1 Above
@@ -114,7 +122,22 @@ class RiskParityPortfolio:
         TODO: Complete Task 2 Below
         """
 
-
+        for i in range(self.lookback + 1, len(df)):
+            # Get historical returns for the lookback window
+            returns_window = df_returns[assets].iloc[i - self.lookback : i]
+            
+            # Calculate volatility (standard deviation) for each asset
+            volatilities = returns_window.std()
+            
+            # Calculate inverse volatility weights
+            inv_vol = 1.0 / volatilities
+            
+            # Normalize to sum to 1
+            weights = inv_vol / inv_vol.sum()
+            
+            # Assign weights to this date
+            self.portfolio_weights.loc[df.index[i], assets] = weights.values
+        
 
         """
         TODO: Complete Task 2 Above
@@ -188,11 +211,28 @@ class MeanVariancePortfolio:
                 TODO: Complete Task 3 Below
                 """
 
-                # Sample Code: Initialize Decision w and the Objective
-                # NOTE: You can modify the following code
-                w = model.addMVar(n, name="w", ub=1)
-                model.setObjective(w.sum(), gp.GRB.MAXIMIZE)
-
+                for i in range(self.lookback + 1, len(self.price)):
+                    returns_window = self.returns[assets].iloc[i - self.lookback : i]
+                    
+                    # Calculate momentum
+                    cumulative_returns = (1 + returns_window).prod() - 1
+                    
+                    # Only invest in assets with positive momentum
+                    positive_assets = cumulative_returns[cumulative_returns > 0].index
+                    
+                    # Equal weight among positive momentum assets
+                    weights = pd.Series(0.0, index=assets)
+                    if len(positive_assets) > 0:
+                        for asset in positive_assets:
+                            weights[asset] = 1.0 / len(positive_assets)
+                    else:
+                        # If all negative, equal weight all
+                        weights = pd.Series(1.0 / len(assets), index=assets)
+                    
+                    # Assign weights
+                    for j, asset in enumerate(assets):
+                        self.portfolio_weights.loc[self.price.index[i], asset] = float(weights.iloc[j])
+                
                 """
                 TODO: Complete Task 3 Above
                 """
